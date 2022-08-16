@@ -1,0 +1,20 @@
+{
+  "name": "connect4",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "watch": "nodemon main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Eric Kalpin",
+  "license": "ISC",
+  "dependencies": {
+    "canvas": "^2.6.1",
+    "discord.js": "^12.2.0",
+    "dotenv": "^8.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.6"
+  },
+  "description": ""
+}
