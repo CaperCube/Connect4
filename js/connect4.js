@@ -42,11 +42,11 @@ const c4Numbers = [
 
 // This represents all holes in a connect4 game
 class Piece {
-    constructor(p, a) {
-        this.player = p || 0 // Stores the player index who owns this piece (0 = non-player)
+    constructor(playerId, age = 0) {
+        this.player = playerId || 0 // Stores the player index who owns this piece (0 = non-player)
         //this.col; // X position
         //this.row; // Y position
-        this.age = a || 0 // How old is this piece? (starts at 0)
+        this.age = age // How old is this piece? (starts at 0)
         this.hp = 10
         this.isPetrified = false
         this.isWinner = false // True if this hole contains a winning piece
@@ -87,15 +87,15 @@ const c4Special = {
     "petrify-random": {offset: 4, icon: "P", Power: (c4g, prompt)=>{
         // Get all other pieces on board
         let otherPlayerPieces = []
-        for (var i = 0; i < c4g.boardHeight; i++) {
+        for (var i = 0; i < c4g.gameOptions.boardHeight; i++) {
             for (var j = 0; j < c4g.boardWidth; j++) {
-                if (c4g.board[i][j].player != 0 && c4g.board[i][j].player != (c4g.turnRotation + 1) && c4g.board[i][j].player < this.colors.players.length) 
+                if (c4g.board[i][j].player != 0 && c4g.board[i][j].player != (c4g.turnRotation + 1) && c4g.board[i][j].player < c4g.colors.players.length) 
                     otherPlayerPieces.push({r: i, c: j})
             }
         }
         // Petrify random other
         const attackPiece = otherPlayerPieces[getRandomInt(0, otherPlayerPieces.length)]
-        c4g.board[attackPiece.r][attackPiece.c].player = this.colors.players.length + c4Special["petrified"].offset
+        c4g.board[attackPiece.r][attackPiece.c].player = c4g.colors.players.length + c4Special["petrified"].offset
         // Set prompt
         let lastPlayer = c4g.turnRotation - 1
         if (lastPlayer < 0) lastPlayer = c4g.players.length -1
@@ -103,7 +103,7 @@ const c4Special = {
     }},
     "grow-vert": {offset: 5, icon: "═", Power: (c4g, prompt)=>{
         // Grow board
-        if (c4g.boardHeight < c4g.boardMaxHeight)
+        if (c4g.gameOptions.boardHeight < c4g.gameOptions.boardMaxHeight)
         {
             let newRow = []
             for (let i = 0; i < c4g.board[0].length; i++) { // For every col
@@ -112,8 +112,8 @@ const c4Special = {
             c4g.board.unshift(newRow) // Place new row at the top
         }
         // Cap board size
-        c4g.boardHeight++
-        c4g.boardHeight = (c4g.boardHeight >= c4g.boardMaxHeight) ? c4g.boardMaxHeight : c4g.boardHeight
+        c4g.gameOptions.boardHeight++
+        c4g.gameOptions.boardHeight = (c4g.gameOptions.boardHeight >= c4g.boardMaxHeight) ? c4g.boardMaxHeight : c4g.gameOptions.boardHeight
         // Set prompt
         let lastPlayer = c4g.turnRotation - 1
         if (lastPlayer < 0) lastPlayer = c4g.players.length -1
@@ -121,7 +121,7 @@ const c4Special = {
     }},
     "grow-horz": {offset: 6, icon: "║", Power: (c4g)=>{
         // Grow board
-        if (c4g.boardWidth + 2 <= c4g.boardMaxWidth)
+        if (c4g.gameOptions.boardWidth + 2 <= c4g.gameOptions.boardMaxWidth)
         {
             for (let i = 0; i < c4g.board.length; i++) { // For every row
                 c4g.board[i].unshift(new Piece(0, 0)) // Place at the beginning of the row
@@ -129,8 +129,8 @@ const c4Special = {
             }
         }
         // Cap board size
-        c4g.boardWidth += 2
-        c4g.boardWidth = (c4g.boardWidth >= c4g.boardMaxWidth) ? c4g.boardMaxWidth : c4g.boardWidth
+        c4g.gameOptions.boardWidth += 2
+        c4g.gameOptions.boardWidth = (c4g.gameOptions.boardWidth >= c4g.boardMaxWidth) ? c4g.boardMaxWidth : c4g.gameOptions.boardWidth
         console.log("rows: " + c4g.board.length, "cols: " + c4g.board[0].length)
         // Set prompt
         let lastPlayer = c4g.turnRotation - 1
@@ -163,7 +163,6 @@ class C4Game {
         ///////////////////////////////////////////////////////
         // ToDo: move these to this.gameOptions object
         ///////////////////////////////////////////////////////
-
         // Available modes:
         // {mode: "none", mod: 0}       - not yet
         // {mode: "timed", mod: 0}      - not yet
@@ -178,21 +177,19 @@ class C4Game {
             turns: 3,
             types: ["extra-turn", "skip-next", "petrify-random", "grow-vert", "grow-horz"]
         }
-
-        // Size calc
-        const boardMaxWidth = 36
-        const boardMaxHeight = 36
-        const clampedWidth = (width >= boardMaxWidth) ? boardMaxWidth : width
-        const clampedHeight = (height >= boardMaxHeight) ? boardMaxHeight : height
-
-        this.boardWidth = clampedWidth
-        this.boardHeight = clampedHeight
         ///////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////
 
         ///////////////////////////////////////////////////////
         // Game Options
         ///////////////////////////////////////////////////////
+
+        // Size calc
+        this.boardMaxWidth = 36
+        this.boardMaxHeight = 36
+        const clampedWidth = (width >= this.boardMaxWidth) ? this.boardMaxWidth : width
+        const clampedHeight = (height >= this.boardMaxHeight) ? this.boardMaxHeight : height
+        
         this.gameOptions = { // ToDo: use this object
             boardWidth: clampedWidth,
             boardHeight: clampedHeight,
@@ -255,7 +252,7 @@ class C4Game {
     //  Bombs (player can drop a bomb)
 
     ///////////////////////////////////////////////////////
-    // Create new board
+    // Create new board (Refactored)
     ///////////////////////////////////////////////////////
     CreateBoard = (w,h) => {
         var newBoard = new Array(h)
@@ -277,7 +274,7 @@ class C4Game {
         /////////////////////////////////////////
         // Sizing & Spacing
         /////////////////////////////////////////
-        const largerDim = (this.boardHeight > this.boardWidth) ? this.boardHeight + 1 : this.boardWidth + 1
+        const largerDim = (this.gameOptions.boardHeight > this.gameOptions.boardWidth) ? this.gameOptions.boardHeight + 1 : this.gameOptions.boardWidth + 1
         const scaleFactor = 1000
         
         // Spacing, and Sizing
@@ -291,8 +288,8 @@ class C4Game {
         // Board size
         // (+1 is for edge spacing)
         const boardCenterOffset = 0.5
-        const boardWide = (this.boardWidth + (boardCenterOffset * 2)) * (holeDiam + spacing)
-        const boardTall = (this.boardHeight + (boardCenterOffset * 2)) * (holeDiam + spacing)
+        const boardWide = (this.gameOptions.boardWidth + (boardCenterOffset * 2)) * (holeDiam + spacing)
+        const boardTall = (this.gameOptions.boardHeight + (boardCenterOffset * 2)) * (holeDiam + spacing)
 
         // Canvas size
         const cw = boardWide + leftPadding
@@ -480,7 +477,7 @@ class C4Game {
         //else piece = 2;
 
         // chosen position is too large
-        if (((pos-1) > (this.boardWidth - 1)) || ((pos-1) < 0)) {
+        if (((pos-1) > (this.gameOptions.boardWidth - 1)) || ((pos-1) < 0)) {
             prompt = "Umm... maybe try a number that's actually valid."
             console.log("The player dumb and typed a number that's too large >:(")
             const attachment = new Discord.MessageAttachment(this.cApp.GetCanvasData(), `Connect4_Game_turn${this.turn}.png`)
@@ -515,8 +512,8 @@ class C4Game {
                 // Check if board is full
                 let otherPlayerPieces = [];
                 var FullCount = 0;
-                for (var i = 0; i < this.boardHeight; i++) {
-                    for (var j = 0; j < this.boardWidth; j++) {
+                for (var i = 0; i < this.gameOptions.boardHeight; i++) {
+                    for (var j = 0; j < this.gameOptions.boardWidth; j++) {
                         if (this.board[i][j].player != 0) 
                         {
                             // Count up board pieces
@@ -527,7 +524,7 @@ class C4Game {
                     }
                 }
 
-                if (FullCount >= (this.boardHeight * this.boardWidth)) {
+                if (FullCount >= (this.gameOptions.boardHeight * this.gameOptions.boardWidth)) {
                     console.log("It's a tie.");
                     prompt = "It's a tie! YOU ALL LOSE!";
                     // Switch player turn
@@ -633,14 +630,14 @@ class C4Game {
             
             // Get all open cols
             let openCols = [];
-            for (var c = 0; c < this.boardWidth; c++) {
-                for (var r = 0; r < this.boardHeight; r++) {
+            for (var c = 0; c < this.gameOptions.boardWidth; c++) {
+                for (var r = 0; r < this.gameOptions.boardHeight; r++) {
                     if (this.board[r][c].player === 0) {
                         // If this row already has a powerup, end the loop
-                        if (this.board[r][c].player >= this.colors.players.length +1) r = this.boardHeight;
+                        if (this.board[r][c].player >= this.colors.players.length +1) r = this.gameOptions.boardHeight;
                         else {
                             openCols.push(c); // Store this col index
-                            r = this.boardHeight; // End looping on this col
+                            r = this.gameOptions.boardHeight; // End looping on this col
                         }
                     }
                 }
@@ -679,11 +676,11 @@ class C4Game {
     CheckRows = () => {
         let pos = []
         // Loop through rows
-        for (var r = 0; r < this.boardHeight; r++) {
+        for (var r = 0; r < this.gameOptions.boardHeight; r++) {
             // new array to check
             var array = new Array()
             // fill array
-            for (var c = 0; c < this.boardWidth; c++) {
+            for (var c = 0; c < this.gameOptions.boardWidth; c++) {
                 array[c] = this.board[r][c].player
                 pos[c] = { x:r, y:c }
             }
@@ -697,11 +694,11 @@ class C4Game {
     CheckCols = () => {
         let pos = []
         // Loop through columns
-        for (var c = 0; c < this.boardWidth; c++) {
+        for (var c = 0; c < this.gameOptions.boardWidth; c++) {
             // new array to check
             var array = new Array()
             // fill array
-            for (var r = 0; r < this.boardHeight; r++) {
+            for (var r = 0; r < this.gameOptions.boardHeight; r++) {
                 array[r] = this.board[r][c].player
                 pos[r] = { x:r, y:c }
             }
@@ -713,8 +710,8 @@ class C4Game {
     }
     
     CheckRDiags = () => {
-        var Ylength = this.boardHeight
-        var Xlength = this.boardWidth
+        var Ylength = this.gameOptions.boardHeight
+        var Xlength = this.gameOptions.boardWidth
         var maxLength = Math.max(Xlength, Ylength)
         var array // temporary array
         let pos
@@ -738,8 +735,8 @@ class C4Game {
     }
     
     CheckLDiags = () => {
-        var Ylength = this.boardHeight
-        var Xlength = this.boardWidth
+        var Ylength = this.gameOptions.boardHeight
+        var Xlength = this.gameOptions.boardWidth
         var maxLength = Math.max(Xlength, Ylength)
         var array // temporary array
         let pos = []
