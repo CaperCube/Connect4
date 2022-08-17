@@ -11,7 +11,6 @@ require('dotenv/config')
 const Discord = require('discord.js')
 const client = new Discord.Client()
 const Canvas = require('canvas')
-const fm = require('./faceMaker.js')
 
 /*////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -955,20 +954,6 @@ function DrawCard(c) {
     
     // Draw symbol
     ctx.drawImage(cardSuitImages[c.suitIndex], 25, 65, 30, 30)
-    console.log("Card drawn")
-
-    // Create discord attatchment
-    return new Discord.MessageAttachment(canvas.toBuffer(), 'Drawn_Card.png')
-}
-
-// Draw image
-function DrawPicture(i) {
-    // Setup canvas
-    ch = canvas.height = i.height
-    cw = canvas.width = i.width
-    
-    // Draw symbol
-    ctx.drawImage(i, 0, 0, cw, ch)
     console.log("Card drawn")
 
     // Create discord attatchment
@@ -2030,7 +2015,7 @@ const BotCommands = {
         description: "Displays information about this bot.",
         function: function(userMessage, mentionMe, args, IAmAMod) {
             // Show info about This bot
-            userMessage.channel.send(fm.HiThere() + `My name is CaperClone! CaperCube made me 👍 I can do a bunch of things.\nMy Github repo is here: ${repoLink}\nType in "${prefix}help" to see the list of commands.`);
+            userMessage.channel.send(`My name is CaperClone! CaperCube made me 👍 I can do a bunch of things.\nMy Github repo is here: ${repoLink}\nType in "${prefix}help" to see the list of commands.`);
         }
     },
     //
@@ -2295,7 +2280,7 @@ const BotCommands = {
             userMessage.channel.send(`${mentionMe} is a bot mod. Congrats!`);
         }
     }
-};
+}
 
 /*////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
