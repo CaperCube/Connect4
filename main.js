@@ -1,16 +1,19 @@
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-// ToDo: Make this project a module so we can use "import" instead of "require"
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-
+////////////////////////////////////////
+// Packages ('import' requires node v13.2.0+ and `"type": "module"` to be in "package.json")
+////////////////////////////////////////
 // nodemon - restarts node server wheen file is saved
 // Use "npm run watch" to run the nodemon version
-require('dotenv/config')
-const Discord = require('discord.js')
+
+import * as dotenv from 'dotenv'
+dotenv.config()
+import Discord from 'discord.js'
 const client = new Discord.Client()
-const Canvas = require('canvas')
+import Canvas from 'canvas'
+
+// My js imports
+
+import CanvasApp from './js/canvasApp.js'
+const cApp = new CanvasApp()
 
 /*////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -23,7 +26,7 @@ var cw, ch
 cw = ch = canvas.width = canvas.height
 
 // Valid canvas image extensions
-const imageExt = ['.jpg','.bmp','.jpeg','.gif','.tiff','.png','.webp','.JPG','.BMP','.JPEG','.GIF','.TIFF','.PNG','.WEBP',]
+const imageExt = ['.jpg','.bmp','.jpeg','.gif','.tiff','.png','.webp','.JPG','.BMP','.JPEG','.GIF','.TIFF','.PNG','.WEBP']
 
 /*////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -31,7 +34,7 @@ const imageExt = ['.jpg','.bmp','.jpeg','.gif','.tiff','.png','.webp','.JPG','.B
 //////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////*/
 
-const repoLink = `https://github.com/CaperCube/CaperClone`
+const repoLink = `https://github.com/CaperCube/Connect4`
 
 // The Discord roles that allow use of "Mod-Only" commands
 const botAdminRoles = ['ADMINISTRATOR', 'BotMod', 'STINKY BABY ADMIN']
@@ -97,7 +100,7 @@ const c4Numbers = [
     `X`,
     `Y`,
     `Z`//35
-];
+]
 
 function Piece(p, a) { // This represents all holes in a connect4 game
     this.player = p || 0; // Stores the player index who owns this piece (0 = non-player)
@@ -872,28 +875,6 @@ function DrawCircle(color, x, y, r) {
     ctx.fill()
 }
 
-// Draw filled circle, custom ctx
-function DrawCircleCtx(cctx, color, x, y, r) {
-    cctx.fillStyle = color
-    cctx.beginPath()
-    cctx.arc(x, y, r, 0, 2 * Math.PI)
-    cctx.closePath()
-    cctx.fill()
-}
-
-// Erase with filled circle
-function EraseCircle(x, y, r) {
-    ctx.save()
-    
-    ctx.beginPath()
-    ctx.arc(x, y, r, 0, 2 * Math.PI)
-    ctx.closePath()
-    ctx.clip()
-    ctx.clearRect(0,0,cw,ch)
-    
-    ctx.restore()
-}
-
 // Erase with circle and context
 function EraseCircleCtx(cctx, x, y, r) {
     let ccw = cctx.canvas.width
@@ -931,33 +912,6 @@ function DrawRoundImage(img, color, x, y, r) {
     }
 
     ctx.restore() // Stop clipping
-}
-
-// Draw Card
-function DrawCard(c) {
-    // Setup canvas
-    ch = canvas.height = 256
-    cw = canvas.width = 170
-    ctx.clearRect(0,0,cw,ch)
-    
-    // Draw base
-    ctx.fillStyle = "#ddd"
-    roundRect(ctx, 0, 0, cw, ch, 20, true, false)
-    ctx.fillStyle = "#eee"
-    roundRect(ctx, 10, 10, cw-20, ch-20, 15, true, false)
-    
-    // Draw number and suit
-    if (c.suit == cardSuits[0] || c.suit == cardSuits[1]) ctx.fillStyle = "#e00"
-    else if (c.suit == cardSuits[2] || c.suit == cardSuits[3]) ctx.fillStyle = "#444"
-    ctx.font = 'bold 40px sans-serif'
-    ctx.fillText(c.card, 25, 55)
-    
-    // Draw symbol
-    ctx.drawImage(cardSuitImages[c.suitIndex], 25, 65, 30, 30)
-    console.log("Card drawn")
-
-    // Create discord attatchment
-    return new Discord.MessageAttachment(canvas.toBuffer(), 'Drawn_Card.png')
 }
 
 /*////////////////////////////////////////////////////////////////////
@@ -1049,16 +1003,16 @@ function randomDate(start, end) {
 
 // Get user from mention
 function getUserFromMention(mention) {
-	if (!mention) return;
+	if (!mention) return
 
 	if (mention.startsWith('<@') && mention.endsWith('>')) {
-		mention = mention.slice(2, -1);
+		mention = mention.slice(2, -1)
 
 		if (mention.startsWith('!')) {
-			mention = mention.slice(1);
+			mention = mention.slice(1)
 		}
 
-		return client.users.cache.get(mention);
+		return client.users.cache.get(mention)
 	}
 }
 
@@ -1072,46 +1026,37 @@ function GetCardFromDeck() {
         suit: cardSuits[0],
         cardName: playingCards[0] + "-" + cardSuits[0]
     }
-    c.card = playingCards[getRandomInt(0, playingCards.length-1)];
-    c.suitIndex = getRandomInt(0, cardSuits.length-1);
-    c.suit = cardSuits[c.suitIndex];
-    c.cardName = c.card + "-" + c.suit;
+    c.card = playingCards[getRandomInt(0, playingCards.length-1)]
+    c.suitIndex = getRandomInt(0, cardSuits.length-1)
+    c.suit = cardSuits[c.suitIndex]
+    c.cardName = c.card + "-" + c.suit
 
-    var drawAttempt = true;
+    var drawAttempt = true
     
     // if the card has already been drawn, put away
     while (drawnCards.includes(c.cardName)) {
-        c.card = playingCards[getRandomInt(0, playingCards.length-1)];
-        c.suitIndex = getRandomInt(0, cardSuits.length-1);
-        c.suit = cardSuits[c.suitIndex];
-        c.cardName = c.card + "-" + c.suit;
+        c.card = playingCards[getRandomInt(0, playingCards.length-1)]
+        c.suitIndex = getRandomInt(0, cardSuits.length-1)
+        c.suit = cardSuits[c.suitIndex]
+        c.cardName = c.card + "-" + c.suit
     }
     
     // put card away
-    if (!drawnCards.includes(c.cardName)) drawnCards[drawnCards.length] = c.cardName;
-    else drawAttempt = false;
+    if (!drawnCards.includes(c.cardName)) drawnCards[drawnCards.length] = c.cardName
+    else drawAttempt = false
     
-    console.log("new card " + c.cardName);
-    console.log(drawnCards);
+    console.log("new card " + c.cardName)
+    console.log(drawnCards)
 
-    return c;
+    return c
 }
 
-async function TryLoadImages(im, im2, callback) {
-    try {
-        if (im) await Canvas.loadImage(im);
-        callback(im);
-    } catch {
-        console.log('Unable to load this image');
-        callback(im2);
-    }
-}
-
-async function LoadUserAvatar(user, then) {
-    const uAvatar = user.displayAvatarURL({dynamic: true, format: "png"});
+// ToDo: replace all uses of this with "cApp.LoadUserAvatar()"
+async function LoadUserAvatar(user, then, CanvasApp = cApp) {
+    const uAvatar = user.displayAvatarURL({dynamic: true, format: "png"})
     // TODO: Use a try / catch here
-    const profilePic = await Canvas.loadImage(uAvatar);
-    then(profilePic);
+    const profilePic = await Canvas.loadImage(uAvatar)
+    then(profilePic)
 }
 
 /*////////////////////////////////////////////////////////////////////
@@ -2179,16 +2124,16 @@ const BotCommands = {
         description: "Draws random a card from the deck.",
         function: function(userMessage, mentionMe, args, IAmAMod) {
             // Draw card
-            var c = GetCardFromDeck();
+            var c = GetCardFromDeck()
             // Create discord attatchment
-            const attachment = DrawCard(c);
+            const attachment = new Discord.MessageAttachment(cApp.DrawCard(c, cardSuits, cardSuitImages), 'Drawn_Card.png')
 
             // Send message
-            var prompt = mentionMe + " drew a " + c.card + " of " + c.suit + ".\nThere are " + (58 - drawnCards.length) + " cards left in deck.";
+            var prompt = mentionMe + " drew a " + c.card + " of " + c.suit + ".\nThere are " + (58 - drawnCards.length) + " cards left in deck."
             if ((58 - drawnCards.length) > 0) {
-                userMessage.channel.send(prompt, attachment);
+                userMessage.channel.send(prompt, attachment)
             }
-            else userMessage.channel.send("The deck is empty, please shuffle.");
+            else userMessage.channel.send("The deck is empty, please shuffle.")
         }
     },
     shuffle: {

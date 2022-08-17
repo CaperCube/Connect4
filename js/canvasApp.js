@@ -1,182 +1,151 @@
-//ToDo: Make this an import
-const Canvas = require('canvas')
+import Canvas from 'canvas'
 
-/*////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-// Canvas init
-//////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////*/
-var canvas = Canvas.createCanvas(512, 512)
-var ctx = canvas.getContext('2d')
-var cw, ch
-cw = ch = canvas.width = canvas.height
-
-/*////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-// Drawing Functions
-//////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////*/
-
-/*////////////////////////////////////////////////////////////////////
-// Shapes
-////////////////////////////////////////////////////////////////////*/
-
-// Draw round rect
-function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-    if (typeof stroke === 'undefined') {
-        stroke = true
+export default class CanvasApp {
+    constructor(size = {x: 512, y: 512}) {
+        // Canvas vars
+        this.canvas = Canvas.createCanvas(size.x, size.y)
+        this.ctx = this.canvas.getContext('2d')
+        this.cw = this.canvas.width
+        this.ch = this.canvas.height
     }
-    
-    if (typeof radius === 'undefined') {
-        radius = 5
+
+    ////////////////////////////////////////////////////
+    // Change Size
+    ////////////////////////////////////////////////////
+    ChangeSize(size = {x: 512, y: 512}) {
+        this.cw = this.canvas.width = size.x
+        this.ch = this.canvas.height = size.y
+        this.ctx.clearRect(0, 0, this.cw, this.ch)
     }
-    
-    if (typeof radius === 'number') {
-        radius = {tl: radius, tr: radius, br: radius, bl: radius}
-    }
-    
-    else {
-        var defaultRadius = {tl: 0, tr: 0, br: 0, bl: 0}
-        for (var side in defaultRadius) {
-            radius[side] = radius[side] || defaultRadius[side]
+
+    ////////////////////////////////////////////////////
+    // Draw Shapes
+    ////////////////////////////////////////////////////
+
+    // Draw round rect
+    RoundRect(x = 0, y = 0, width = 20, height = 20, color = "#ffffff", radius = 10, fill = true, stroke = false) {
+        this.ctx.fillStyle = color
+        
+        if (typeof radius === 'number') {
+            radius = {tl: radius, tr: radius, br: radius, bl: radius}
+        }
+        
+        else {
+            var defaultRadius = {tl: 0, tr: 0, br: 0, bl: 0}
+            for (var side in defaultRadius) {
+                radius[side] = radius[side] || defaultRadius[side]
+            }
+        }
+        
+        this.ctx.beginPath()
+        this.ctx.moveTo(x + radius.tl, y)
+        this.ctx.lineTo(x + width - radius.tr, y)
+        this.ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr)
+        this.ctx.lineTo(x + width, y + height - radius.br)
+        this.ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height)
+        this.ctx.lineTo(x + radius.bl, y + height)
+        this.ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl)
+        this.ctx.lineTo(x, y + radius.tl)
+        this.ctx.quadraticCurveTo(x, y, x + radius.tl, y)
+        this.ctx.closePath()
+        
+        if (fill) {
+            this.ctx.fill()
+        }
+        if (stroke) {
+            this.ctx.stroke()
         }
     }
-    
-    ctx.beginPath()
-    ctx.moveTo(x + radius.tl, y)
-    ctx.lineTo(x + width - radius.tr, y)
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr)
-    ctx.lineTo(x + width, y + height - radius.br)
-    ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height)
-    ctx.lineTo(x + radius.bl, y + height)
-    ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl)
-    ctx.lineTo(x, y + radius.tl)
-    ctx.quadraticCurveTo(x, y, x + radius.tl, y)
-    ctx.closePath()
-    
-    if (fill) {
-        ctx.fill()
-    }
-    if (stroke) {
-        ctx.stroke()
-    }
-}
 
-// Draw filled circle
-function DrawCircle(color, x, y, r) {
-    ctx.fillStyle = color
-    ctx.beginPath()
-    ctx.arc(x, y, r, 0, 2 * Math.PI)
-    ctx.closePath()
-    ctx.fill()
-}
-
-// Draw filled circle, custom ctx
-function DrawCircleCtx(cctx, color, x, y, r) {
-    cctx.fillStyle = color
-    cctx.beginPath()
-    cctx.arc(x, y, r, 0, 2 * Math.PI)
-    cctx.closePath()
-    cctx.fill()
-}
-
-// Erase with filled circle
-function EraseCircle(x, y, r) {
-    ctx.save()
-    
-    ctx.beginPath()
-    ctx.arc(x, y, r, 0, 2 * Math.PI)
-    ctx.closePath()
-    ctx.clip()
-    ctx.clearRect(0,0,cw,ch)
-    
-    ctx.restore()
-}
-
-// Erase with circle and context
-function EraseCircleCtx(cctx, x, y, r) {
-    let ccw = cctx.canvas.width
-    let cch = cctx.canvas.height
-
-    cctx.save()
-    
-    cctx.beginPath()
-    cctx.arc(x, y, r, 0, 2 * Math.PI)
-    cctx.closePath()
-    cctx.clip()
-    cctx.clearRect(0,0,ccw,cch)
-    
-    cctx.restore()
-}
-
-/*////////////////////////////////////////////////////////////////////
-// Images
-////////////////////////////////////////////////////////////////////*/
-
-// Draw round image
-function DrawRoundImage(img, color, x, y, r) {
-    ctx.save() // save the context
-    ctx.beginPath()
-    ctx.arc(x, y, r, 0, 2 * Math.PI)
-    ctx.closePath()
-    ctx.clip()
-
-    try {
-        ctx.drawImage(img, x-r, y-r, r*2, r*2)
-    } catch {
-        //console.log('Unable to draw this image');
-        ctx.fillStyle = color
-        ctx.fillRect(x-r, y-r, r*2, r*2)
+    // Draw filled circle
+    DrawCircle(color, x, y, r) {
+        this.ctx.fillStyle = color
+        this.ctx.beginPath()
+        this.ctx.arc(x, y, r, 0, 2 * Math.PI)
+        this.ctx.closePath()
+        this.ctx.fill()
     }
 
-    ctx.restore() // Stop clipping
-}
-
-// Draw Card
-function DrawCard(c) {
-    // Setup canvas
-    ch = canvas.height = 256
-    cw = canvas.width = 170
-    ctx.clearRect(0,0,cw,ch)
-    
-    // Draw base
-    ctx.fillStyle = "#ddd"
-    roundRect(ctx, 0, 0, cw, ch, 20, true, false)
-    ctx.fillStyle = "#eee"
-    roundRect(ctx, 10, 10, cw-20, ch-20, 15, true, false)
-    
-    // Draw number and suit
-    if (c.suit == cardSuits[0] || c.suit == cardSuits[1]) ctx.fillStyle = "#e00"
-    else if (c.suit == cardSuits[2] || c.suit == cardSuits[3]) ctx.fillStyle = "#444"
-    ctx.font = 'bold 40px sans-serif'
-    ctx.fillText(c.card, 25, 55)
-    
-    // Draw symbol
-    ctx.drawImage(cardSuitImages[c.suitIndex], 25, 65, 30, 30)
-    console.log("Card drawn")
-
-    // Create discord attatchment
-    return new Discord.MessageAttachment(canvas.toBuffer(), 'Drawn_Card.png')
-}
-
-
-
-
-/////////////////////////
-// Refactor
-/////////////////////////
-
-class CanvasApp {
-    constructor() {
-        // canvas
-        // ctx
-        // cw
-        // ch
+    // Erase with circle and context
+    EraseCircle(x, y, r) {
+        this.ctx.save()
+        
+        this.ctx.beginPath()
+        this.ctx.arc(x, y, r, 0, 2 * Math.PI)
+        this.ctx.closePath()
+        this.ctx.clip()
+        this.ctx.clearRect(0, 0, this.cw, this.ch)
+        
+        this.ctx.restore()
     }
 
-    // Change size
+    ////////////////////////////////////////////////////
+    // Draw Images
+    ////////////////////////////////////////////////////
 
-    // Draw functions
+    // Draw round image
+    DrawRoundImage(img, color, x, y, r) {
+        this.ctx.save() // save the context
+        this.ctx.beginPath()
+        this.ctx.arc(x, y, r, 0, 2 * Math.PI)
+        this.ctx.closePath()
+        this.ctx.clip()
 
+        try {
+            this.ctx.drawImage(img, x-r, y-r, r*2, r*2)
+        } catch {
+            //console.log('Unable to draw this image');
+            this.ctx.fillStyle = color
+            this.ctx.fillRect(x-r, y-r, r*2, r*2)
+        }
+
+        this.ctx.restore() // Stop clipping
+    }
+
+    // Draw Card
+    DrawCard(c, cardSuits, cardSuitImages) {
+        // Setup canvas
+        this.ChangeSize({x: 170, y: 256})
+        
+        // Draw base
+        this.RoundRect(0, 0, this.cw, this.ch, "#ddd", 20, true, false)
+        this.RoundRect(10, 10, this.cw-20, this.ch-20, "#eee", 15, true, false)
+        
+        // Draw number and suit
+        if (c.suit == cardSuits[0] || c.suit == cardSuits[1]) this.ctx.fillStyle = "#e00"
+        else if (c.suit == cardSuits[2] || c.suit == cardSuits[3]) this.ctx.fillStyle = "#444"
+        this.ctx.font = 'bold 40px sans-serif'
+        this.ctx.fillText(c.card, 25, 55)
+        
+        // Draw symbol
+        this.ctx.drawImage(cardSuitImages[c.suitIndex], 25, 65, 30, 30)
+        console.log("Card drawn")
+
+        // Create discord attatchment
+        return this.GetCanvasData()
+    }
+
+    ////////////////////////////////////////////////////
+    // Load Images
+    ////////////////////////////////////////////////////
+
+    async LoadUserAvatar(user, then) {
+        const uAvatar = user.displayAvatarURL({dynamic: true, format: "png"})
+        try {
+            if (profilePic) {
+                const profilePic = await Canvas.loadImage(uAvatar)
+                then(profilePic)
+            }
+        } catch {
+            console.log('Unable to load this image')
+        }
+    }
+
+    ////////////////////////////////////////////////////
     // Get canvas data / image
+    ////////////////////////////////////////////////////
+    GetCanvasData() {
+        return this.canvas.toBuffer()
+    }
+    
 }
