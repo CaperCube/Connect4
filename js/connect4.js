@@ -1,7 +1,8 @@
+import Discord from 'discord.js'
 import CanvasApp from "./canvasApp.js"
 
 // List of valid spaces on connct4 board (not yet implemented)
-const c4Numbers = [
+export const c4Numbers = [
     `1`,
     `2`,
     `3`,
@@ -41,7 +42,7 @@ const c4Numbers = [
 ]
 
 // This represents all holes in a connect4 game
-class Piece {
+export class Piece {
     constructor(playerId, age = 0) {
         this.player = playerId || 0 // Stores the player index who owns this piece (0 = non-player)
         //this.col; // X position
@@ -54,7 +55,7 @@ class Piece {
 }
 
 // This is the class for all connect4 players (Not yet implemented)
-class C4Player {
+export class C4Player {
     constructor(newId) {
         this.id = newId || 0
         this.img = null
@@ -63,7 +64,7 @@ class C4Player {
 }
 
 // Power-ups for C4
-const c4Special = {
+export const c4Special = {
     "petrified": {offset: 1, icon: "", Power: (c4g, prompt)=>{
         //...
         // Nothing because this isn't a powerup (though maybe health loss?)
@@ -140,8 +141,8 @@ const c4Special = {
 }
 
 // Main class for the Connect4 game
-class C4Game {
-    constructor(canvasApp, {host, width = 7, height = 6, winCount = 4, playerCount = 2, mode = "none"}) {
+export default class C4Game {
+    constructor(canvasApp, host, width = 7, height = 6, winCount = 4, playerCount = 2, mode = "none") {
         ///////////////////////////////////////////////////////
         // Game Vars
         ///////////////////////////////////////////////////////
@@ -227,8 +228,7 @@ class C4Game {
     // if new make a new object for storing data and place them into the users list
 
     // Save user data to JSON file
-    //  Points (leaderboard)
-    //  Side-bar coordinates (like battle ship)
+    //  Points / Wins (leaderboard)
 
     // Game modes:
     //  (Decay) After every X turns a random player token gets petrified
@@ -254,14 +254,18 @@ class C4Game {
     ///////////////////////////////////////////////////////
     // Create new board (Refactored)
     ///////////////////////////////////////////////////////
-    CreateBoard = (w,h) => {
-        var newBoard = new Array(h)
-        for (var i = 0; i < h; i++) {
-            newBoard[i] = new Array(w)
-            for (var j = 0; j < w; j++) {
-                //newBoard[i][j] = 0
-                //newBoard[i][j] = {player, winner, age, ...}
-                newBoard[i][j] = new Piece(0, 0) //{player: 0, winner: false, age: 0}
+    CreateBoard = () => {
+        const w = this.gameOptions.boardWidth
+        const h = this.gameOptions.boardHeight
+        const clampedWidth = (w >= this.boardMaxWidth) ? this.boardMaxWidth : w
+        const clampedHeight = (h >= this.boardMaxHeight) ? this.boardMaxHeight : h
+
+        var newBoard = new Array(clampedHeight)
+        for (var i = 0; i < clampedHeight; i++) {
+            newBoard[i] = new Array(clampedWidth)
+            for (var j = 0; j < clampedWidth; j++) {
+                // Place empty piece in each spot
+                newBoard[i][j] = new Piece(0, 0)
             }
         }
         this.board = newBoard
@@ -472,9 +476,6 @@ class C4Game {
         var prompt = ""
         // Get color by player turn
         if (this.turnRotation >= this.players.length) this.turnRotation = 0
-        //var piece = 0;
-        //if ((this.turn % 2) == 0) piece = 1;
-        //else piece = 2;
 
         // chosen position is too large
         if (((pos-1) > (this.gameOptions.boardWidth - 1)) || ((pos-1) < 0)) {
@@ -490,108 +491,134 @@ class C4Game {
             //place if open
             if (this.board[i][pos-1].player == 0) {
                 // Decay game mode
-                this.DoDecay();
+                this.DoDecay()
                 
-                //this.board[i][pos-1] = piece;
                 // Get powerup if it exists
-                const pieceType = this.board[0][pos-1].player;
-                const gotPowerup = pieceType >= this.colors.players.length;
+                const pieceType = this.board[0][pos-1].player
+                const gotPowerup = pieceType >= this.colors.players.length
                 // Remove powerup if we didn't place here
-                if (i != 0) this.board[0][pos-1].player = 0;
+                if (i != 0) this.board[0][pos-1].player = 0
                 // Place piece
-                this.board[i][pos-1].player = this.turnRotation + 1;
-                placed = true;
+                this.board[i][pos-1].player = this.turnRotation + 1
+                placed = true
 
                 // Check if player won
-                this.hasWon = this.CheckWinner();
+                this.hasWon = this.CheckWinner()
                 if (this.hasWon) {
-                    this.winner = this.playerTurn;
-                    this.players[this.turnRotation].isWinner = true;
+                    this.winner = this.playerTurn
+                    this.players[this.turnRotation].isWinner = true
                 }
 
                 // Check if board is full
-                let otherPlayerPieces = [];
-                var FullCount = 0;
+                let otherPlayerPieces = []
+                var FullCount = 0
                 for (var i = 0; i < this.gameOptions.boardHeight; i++) {
                     for (var j = 0; j < this.gameOptions.boardWidth; j++) {
                         if (this.board[i][j].player != 0) 
                         {
                             // Count up board pieces
-                            if (this.board[i][j].player == this.colors.players.length+1) FullCount++;
+                            if (this.board[i][j].player == this.colors.players.length+1) FullCount++
                             // Store this for attack powerups
-                            if (this.board[i][j].player != (this.turnRotation + 1) && this.board[i][j].player < this.colors.players.length) otherPlayerPieces.push({r: i, c: j});
+                            if (this.board[i][j].player != (this.turnRotation + 1) && this.board[i][j].player < this.colors.players.length) otherPlayerPieces.push({r: i, c: j})
                         }
                     }
                 }
 
                 if (FullCount >= (this.gameOptions.boardHeight * this.gameOptions.boardWidth)) {
-                    console.log("It's a tie.");
-                    prompt = "It's a tie! YOU ALL LOSE!";
+                    console.log("It's a tie.")
+                    prompt = "It's a tie! YOU ALL LOSE!"
                     // Switch player turn
-                    this.turn++;
-                    this.turnRotation++;
-                    if (this.turnRotation >= this.players.length) this.turnRotation = 0;
-                    this.playerTurn = this.players[this.turnRotation].id;
+                    this.turn++
+                    this.turnRotation++
+                    if (this.turnRotation >= this.players.length) this.turnRotation = 0
+                    this.playerTurn = this.players[this.turnRotation].id
                 }
                 else {
                     // Switch player turn
-                    this.turn++;
-                    this.turnRotation++;
-                    if (this.turnRotation >= this.players.length) this.turnRotation = 0;
-                    this.playerTurn = this.players[this.turnRotation].id;
-
-                    //console.log(this.turn);
-                    //console.log(this.turnRotation);
-                    //console.log(this.playerTurn);
-                    //if ((this.turn % 2) == 0) this.playerTurn = this.players[0];
-                    //else this.playerTurn = this.players[1];
+                    this.turn++
+                    this.turnRotation++
+                    if (this.turnRotation >= this.players.length) this.turnRotation = 0
+                    this.playerTurn = this.players[this.turnRotation].id
 
                     // Check if got powerup
-                    let powerupPrompt = "";
+                    let powerupPrompt = ""
                     if (gotPowerup) {
                         switch (pieceType) {
                             default:
-                                const powerIndex = pieceType - this.colors.players.length;
-                                const filteredObj = Object.filter(c4Special, power => power.offset === powerIndex);
-                                const powerName = Object.keys(filteredObj)[0];
-                                const powerObj = c4Special[powerName];
-                                console.log("Drawing: ", powerName, powerObj, powerIndex);
+                                const powerIndex = pieceType - this.colors.players.length
+                                const filteredObj = Object.filter(c4Special, power => power.offset === powerIndex)
+                                const powerName = Object.keys(filteredObj)[0]
+                                const powerObj = c4Special[powerName]
+                                console.log("Drawing: ", powerName, powerObj, powerIndex)
                                 // If this power exists, do its power
                                 if (powerObj) {
-                                    powerObj.Power(this, powerupPrompt); // function with the reference to this game
+                                    powerObj.Power(this, powerupPrompt) // function with the reference to this game
                                 }
-                                break;
+                                break
                         }
                     }
 
                     // Place powerup in PowerUp game mode
-                    this.DoPowerup();
+                    this.DoPowerup()
 
                     // Set message
-                    var mention = "<@" + this.playerTurn + ">";
-                    prompt = `It is ${mention}'s turn.${powerupPrompt}`;
+                    var mention = "<@" + this.playerTurn + ">"
+                    prompt = `It is ${mention}'s turn.${powerupPrompt}`
                 }
 
                 // End loop
-                i = -1;
+                i = -1
             }
             // if column is full
             if (i == 0 && placed == false) {
                 // return an error "Column is filled"
-                prompt = "This column is filled, maybe try an open slot... stinky!";
-                console.log("The player dumb and can't see the column is full I guess...");
+                prompt = "This column is filled, maybe try an open slot... stinky!"
+                console.log("The player dumb and can't see the column is full I guess...")
             }
         }
         
         // Change prompt is player wins
         if (this.hasWon) {
-            var winMention = "<@" + this.winner + ">";
-            prompt = "Hey " + winMention + ", you win! Good job, son! I'm proud of you.";
+            var winMention = "<@" + this.winner + ">"
+            prompt = "Hey " + winMention + ", you win! Good job, son! I'm proud of you."
 
             // Set game to inactive
-            this.isActive = false;
+            this.isActive = false
         }
 
+        // Draw board
+        this.DrawBoard()
+
+        // Create discord attatchment
+        const attachment = new Discord.MessageAttachment(this.cApp.GetCanvasData(), `Connect4_Game_turn${this.turn}.png`)
+        return {p: prompt, a: attachment}
+    }
+
+    ///////////////////////////////////////////////////////
+    // Game
+    ///////////////////////////////////////////////////////
+    StartGame(sendMessage = () => {}) { // ToDo: implement this
+        // Set random starting player
+        this.RandomizePlayers()
+        this.playerTurn = this.players[0].id
+        console.log(this.players)
+
+        // Start game
+        this.CreateBoard()
+        this.isActive = true
+        
+        const mention = `<@${this.playerTurn}>`
+        const prompt = `It is ${mention}'s turn.\nType "${prefix}" <1-${this.gameOptions.boardWidth}> to place a piece.`
+
+        // Draw and send board
+        const message = this.SendBoardUpdate(prompt)
+        sendMessage(message.p, message.a)
+    }
+
+    ///////////////////////////////////////////////////////
+    // Send Updates
+    ///////////////////////////////////////////////////////
+    SendBoardUpdate(prompt) {
         // Draw board
         this.DrawBoard()
 
@@ -777,7 +804,7 @@ class C4Game {
                     winningIndexes.push(i)
                     count++
                     // if there is enough in a row to win
-                    if (count >= myC4Game.winCount) {
+                    if (count >= this.winCount) {
                         // Set all winning pieces isWinner = true
                         if (winningIndexes.length > 0) {
                             for (let q = 0; q < winningIndexes.length; q++) {
@@ -800,6 +827,15 @@ class C4Game {
             last = ar[i]
         }
         return false
+    }
+
+    RandomizePlayers() {
+        let m = this.players.length, i
+        while(m) {
+            i = Math.floor(Math.random() * m--)
+    
+            [this.players[m], this.players[i]] = [this.players[i], this.players[m]]
+        }
     }
 }
 
