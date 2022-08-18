@@ -1,11 +1,27 @@
+import { getRandomInt } from "./utils.js"
+
 // ToDo: Refactor & use these
 
 ///////////////////////////////////////////////
-// Generate Complement
+// Generate Complement / Insult
 ///////////////////////////////////////////////
-function Complement() {
-    var responce = "you're a ";
-    var adjectives = [
+
+var startWords = [
+    "Hey,",
+    "Yo,",
+    "Listen,",
+    "Ok ok,",
+    "Umm... sooo,",
+    "Here's the thing,",
+    "That's it,",
+    "Dude!",
+    "Oi Mate,"
+]
+
+export function Complement(mention = '') {
+    const starter = startWords[getRandomInt(0, startWords.length)]
+
+    const adjectives = [
         "distinguished",
         "amazing",
         "fantastic",
@@ -27,8 +43,8 @@ function Complement() {
         "friggin' awesome",
         "neat",
         "beautiful"
-    ];
-    var noun = [
+    ]
+    const noun = [
         "individual",
         "being",
         "soul",
@@ -43,38 +59,28 @@ function Complement() {
         "saint",
         "angel",
         "legend"
-    ];
+    ]
 
-    var times = Math.floor(Math.random() * 10);
+    let responce = "you're a "
 
-    for (var i = 0; i < times; i++) {
-        var pick = getRandomInt(0, adjectives.length -1);
-        if (i > 0) responce += ", ";
-        responce += adjectives[pick];
+    const times = Math.floor(Math.random() * 10)
+
+    for (let i = 0; i < times; i++) {
+        const pick = getRandomInt(0, adjectives.length -1)
+        if (i > 0) responce += ", "
+        responce += adjectives[pick]
     }
-    var pick = getRandomInt(0, noun.length -1);
-    responce += " " + noun[pick];
 
-    return responce;
+    const pick = getRandomInt(0, noun.length -1)
+    responce += " " + noun[pick]
+
+    return `${starter} ${mention} ${responce}`
 }
 
-///////////////////////////////////////////////
-// Generate Insult
-///////////////////////////////////////////////
-var startWords = [
-    "Hey, ",
-    "Yo, ",
-    "Listen, ",
-    "Ok ok, ",
-    "Umm... sooo, ",
-    "Here's the thing, ",
-    "That's it, ",
-    "Dude! ",
-    "Oi Mate, "
-]
+export function Insult(mention = '', self = false) {
+    const starter = startWords[getRandomInt(0, startWords.length)]
 
-function Insult(self = false) {
-    var starters = [
+    const starters = [
         "you're a ",
         "you remind me of a ",
         "you're kinda like a ",
@@ -85,7 +91,7 @@ function Insult(self = false) {
         "you've been known in my town as a ",
         "you may be a "
     ]
-    var adverbs = [
+    const adverbs = [
         "inoperablely",
         "unquantifiably",
         "genuinely",
@@ -109,7 +115,7 @@ function Insult(self = false) {
         "unusually",
         "haphazardly"
     ]
-    var adjectives = [
+    const adjectives = [
         "stinky",
         "predictable",
         "smelly",
@@ -152,7 +158,7 @@ function Insult(self = false) {
         "poo-nosed",
         "dick-dunkin'"
     ]
-    var noun = [
+    const noun = [
         "individual",
         "lizard",
         "being",
@@ -199,14 +205,14 @@ function Insult(self = false) {
         "dunce"
     ]
 
-    var responce = ''
+    let responce = ''
     if (!self) responce = starters[getRandomInt(0, starters.length -1)]
     else responce = `I'm a `
 
-    var times = Math.floor(Math.random() * 5)
-    for (var i = 0; i < times; i++) {
+    const times = Math.floor(Math.random() * 5) + 1
+    for (let i = 0; i < times; i++) {
         // Decide if it's an adverb or adjective
-        var adv = Math.random() < 0.5
+        const adv = (Math.random() < 0.5)
 
         // Get on with it
         if (i > 0) responce += ", "
@@ -214,31 +220,28 @@ function Insult(self = false) {
         // Add insult
         if (adv) {
             //adjective
-            var pick = getRandomInt(0, adjectives.length -1)
+            const pick = getRandomInt(0, adjectives.length -1)
             responce += adjectives[pick]
         }
         else {
             //adverb
-            var pick = getRandomInt(0, adverbs.length -1)
+            const pick = getRandomInt(0, adverbs.length -1)
             responce += adverbs[pick]
         }
     }
 
-    // One more adjective
-    responce += ", "
-    responce += adjectives[getRandomInt(0, adjectives.length -1)]
-
-    var pick = getRandomInt(0, noun.length -1)
+    const pick = getRandomInt(0, noun.length -1)
     responce += " " + noun[pick] + "!"
 
-    return responce
+    return mention? `${starter} ${mention} ${responce}` : `${starter} ${responce}`
 }
 
 ///////////////////////////////////////////////
 // Generate Laugh
 ///////////////////////////////////////////////
-function LaughAlong() {
-    var options = [
+
+export function LaughAlong() {
+    const options = [
         "ha",
         "hah",
         "heh",
@@ -248,78 +251,26 @@ function LaughAlong() {
         "dude",
         "bruh",
         ""
-    ];
-    var times = Math.floor(Math.random() * 20);
-    var responce = "";
-    for (var i = 0; i < times; i++) {
-        var pick = getRandomInt(0, options.length -1);
+    ]
+    const times = Math.floor(Math.random() * 20)
+    let responce = ""
+    for (let i = 0; i < times; i++) {
+        const pick = getRandomInt(0, options.length -1)
         if (pick >= 5) {
-            responce += " ";
-            responce += options[pick];
-            responce += " ";
+            responce += " "
+            responce += options[pick]
+            responce += " "
         }
-        else responce += options[pick];
+        else responce += options[pick]
     }
 
-    responce += " that was funny!";
-    return responce;
+    responce += " that was funny!"
+    return responce
 }
 
 ///////////////////////////////////////////////
 // Generate a random phrase
 ///////////////////////////////////////////////
-function GenPhrase() {
-            
-    // Pick sentence structure
-    var str = PhraseDefs.structures[Math.floor(Math.random() * PhraseDefs.structures.length)];
-    var phrase = "";
-    
-    // Console log
-    var structString = "";
-    for (var i = 0; i < str.length; i++) { structString += PhraseDefs.strucDef[str[i]] + " "; }
-    console.log("Structure = " + structString);
-    
-    // Pick words
-    for (var i = 0; i < str.length; i++) {
-        switch (str[i]) {
-            case 0:
-                phrase += PhraseDefs.nouns[Math.floor(Math.random() * PhraseDefs.nouns.length)] + " ";
-            break;
-            case 1:
-                phrase += PhraseDefs.adjectives[Math.floor(Math.random() * PhraseDefs.adjectives.length)] + " ";
-            break;
-            case 2:
-                phrase += PhraseDefs.adverbs[Math.floor(Math.random() * PhraseDefs.adverbs.length)] + " ";
-            break;
-            case 3:
-                phrase += PhraseDefs.verbs[Math.floor(Math.random() * PhraseDefs.verbs.length)] + " ";
-            break;
-            case 4:
-                phrase += PhraseDefs.pronouns[Math.floor(Math.random() * PhraseDefs.pronouns.length)] + " ";
-            break;
-            case 5:
-                phrase += PhraseDefs.possesiveNouns[Math.floor(Math.random() * PhraseDefs.possesiveNouns.length)] + " ";
-            break;
-            case 6:
-                phrase += PhraseDefs.prepositions[Math.floor(Math.random() * PhraseDefs.prepositions.length)] + " ";
-            break;
-            case 7:
-                phrase += PhraseDefs.conjunctions[Math.floor(Math.random() * PhraseDefs.conjunctions.length)] + " ";
-            break;
-            case 8:
-                phrase += PhraseDefs.interjections[Math.floor(Math.random() * PhraseDefs.interjections.length)] + " ";
-            break;
-            case 9:
-                phrase += PhraseDefs.articles[Math.floor(Math.random() * PhraseDefs.articles.length)] + " ";
-            break;
-            default:
-                //phrase += nouns[Math.floor(Math.random() * nouns.length)] + " ";
-            break;                     
-        }
-    }
-    
-    return phrase;
-}
 
 var PhraseDefs = {
     strucDef: [
@@ -617,4 +568,59 @@ var PhraseDefs = {
         "the",
         "le"
     ]
+}
+
+export function GenPhrase() {
+            
+    // Pick sentence structure
+    const str = PhraseDefs.structures[Math.floor(Math.random() * PhraseDefs.structures.length)]
+    let phrase = ""
+    
+    // Console log
+    let structString = ""
+    for (let i = 0; i < str.length; i++) {
+        structString += PhraseDefs.strucDef[str[i]] + " "
+    }
+    console.log("Structure = " + structString)
+    
+    // Pick words
+    for (let i = 0; i < str.length; i++) {
+        switch (str[i]) {
+            case 0:
+                phrase += PhraseDefs.nouns[Math.floor(Math.random() * PhraseDefs.nouns.length)] + " "
+            break
+            case 1:
+                phrase += PhraseDefs.adjectives[Math.floor(Math.random() * PhraseDefs.adjectives.length)] + " "
+            break
+            case 2:
+                phrase += PhraseDefs.adverbs[Math.floor(Math.random() * PhraseDefs.adverbs.length)] + " "
+            break
+            case 3:
+                phrase += PhraseDefs.verbs[Math.floor(Math.random() * PhraseDefs.verbs.length)] + " "
+            break
+            case 4:
+                phrase += PhraseDefs.pronouns[Math.floor(Math.random() * PhraseDefs.pronouns.length)] + " "
+            break
+            case 5:
+                phrase += PhraseDefs.possesiveNouns[Math.floor(Math.random() * PhraseDefs.possesiveNouns.length)] + " "
+            break
+            case 6:
+                phrase += PhraseDefs.prepositions[Math.floor(Math.random() * PhraseDefs.prepositions.length)] + " "
+            break
+            case 7:
+                phrase += PhraseDefs.conjunctions[Math.floor(Math.random() * PhraseDefs.conjunctions.length)] + " "
+            break
+            case 8:
+                phrase += PhraseDefs.interjections[Math.floor(Math.random() * PhraseDefs.interjections.length)] + " "
+            break
+            case 9:
+                phrase += PhraseDefs.articles[Math.floor(Math.random() * PhraseDefs.articles.length)] + " "
+            break
+            default:
+                //phrase += nouns[Math.floor(Math.random() * nouns.length)] + " "
+            break                 
+        }
+    }
+    
+    return phrase
 }
