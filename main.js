@@ -2082,6 +2082,8 @@ const BotCommands = {
                     // Create discord attatchment
                     const attachment = new Discord.MessageAttachment(myC4Game.cApp.GetCanvasData(), 'Connect4_Game_turn'+myC4Game.turn+'.png')
                     userMessage.channel.send("", attachment)
+
+                    // myC4Game.StartGame()
                 }
                 else userMessage.channel.send("Waiting for more players...")
             }
