@@ -57,7 +57,8 @@ export class Piece {
     }
 }
 
-// This is the class for all connect4 players (Not yet implemented)
+// This is the class for all connect4 players
+// (Not yet implemented)
 export class C4Player {
     constructor(newId) {
         this.id = newId || 0
@@ -215,7 +216,7 @@ export default class C4Game {
     }
 
     ////////////////////////
-    // TODO
+    // ToDo:
     ////////////////////////
 
     // Check for new users (one outside a list)
@@ -246,8 +247,9 @@ export default class C4Game {
     //  Bombs (player can drop a bomb)
 
     ///////////////////////////////////////////////////////
-    // Create new board (Refactored)
+    // Create new board
     ///////////////////////////////////////////////////////
+
     CreateBoard = () => {
         const w = this.gameOptions.boardWidth
         const h = this.gameOptions.boardHeight
@@ -266,8 +268,9 @@ export default class C4Game {
     }
 
     ///////////////////////////////////////////////////////
-    // Draw board (Refactored)
+    // Draw board
     ///////////////////////////////////////////////////////
+
     DrawBoard = () => {
         /////////////////////////////////////////
         // Sizing & Spacing
@@ -466,6 +469,7 @@ export default class C4Game {
     ///////////////////////////////////////////////////////
     // Place a piece
     ///////////////////////////////////////////////////////
+
     PlacePiece = (pos) => {
         var prompt = ""
         // Get color by player turn
@@ -480,7 +484,7 @@ export default class C4Game {
         }
 
         // place piece at pos
-        var placed = false;
+        var placed = false
         for (var i = this.board.length-1; i > -1; i--) {
             //place if open
             if (this.board[i][pos-1].player == 0) {
@@ -589,8 +593,9 @@ export default class C4Game {
     }
 
     ///////////////////////////////////////////////////////
-    // Game Commands (Refactored)
+    // Game Commands
     ///////////////////////////////////////////////////////
+
     StartGame(sendMessage = () => {}, prefix = "//") {
         // Set random starting player
         shuffle(this.players)
@@ -651,8 +656,9 @@ export default class C4Game {
     }
 
     ///////////////////////////////////////////////////////
-    // Send Updates (Refactored)
+    // Send Updates
     ///////////////////////////////////////////////////////
+
     SendBoardUpdate(prompt) {
         // Draw board
         this.DrawBoard()
@@ -663,8 +669,9 @@ export default class C4Game {
     }
 
     ///////////////////////////////////////////////////////
-    // Game modes (Refactored)
+    // Game modes
     ///////////////////////////////////////////////////////
+
     DoDecay = () => {
         // Check to see if game mode is active and the selected number of turns have passed
         if (this.gameOptions.gameModes.includes("decay") && ((this.turn + 1) % this.gameOptions.decayProps.turns) == 0) {
@@ -722,8 +729,9 @@ export default class C4Game {
     }
 
     ///////////////////////////////////////////////////////
-    // Check winner (Refactored)
+    // Check winner
     ///////////////////////////////////////////////////////
+
     // The function to call when checking for winners
     CheckWinner = () => {
         var rowWin = this.CheckRows()
@@ -864,32 +872,3 @@ export default class C4Game {
         return false
     }
 }
-
-
-
-////////////////////////////
-// Refactor
-////////////////////////////
-
-/*
-class C4Game {
-    constructor(canvasApp, options = {}) {
-        this.window = canvasApp
-    }
-
-    //
-    // Functions for chat commads to call
-    // Many of these should have callbacks to send the image to chat
-    //
-
-    // Create game
-    // Join game
-    // Start game
-
-    // Do turn (place piece)
-
-    // Use powerup
-
-    // Check wins
-}
-*/
