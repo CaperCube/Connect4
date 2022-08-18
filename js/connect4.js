@@ -1,5 +1,8 @@
 import Discord from 'discord.js'
 import CanvasApp from "./canvasApp.js"
+import { getRandomInt, shuffle } from './utils.js'
+
+export const playerColorArray = ["#ee1111", "#ffcc11", "#d400f9", "#1bed97", "#76aa3a", "#66509b", "#82c8d8", "#755a2c", "#e8b6ff", "#408184", "#ffd4a9", "#8c4f70"]
 
 // List of valid spaces on connct4 board (not yet implemented)
 export const c4Numbers = [
@@ -146,24 +149,23 @@ export default class C4Game {
         ///////////////////////////////////////////////////////
         // Game Vars
         ///////////////////////////////////////////////////////
-        this.cApp = canvasApp || new CanvasApp()
-        //this.players = [host]; // Player 1 (creator of game) & Player 2 (player who joined)
-        this.players = [{id: host.id, img: host.img, isWinner: false}] // Player 1 (creator of game) & Player 2 (player who joined)
-        this.expectedPlayerCount = playerCount
-        this.playerTurn // Player who's turn it is
-        this.turn = 0
-        this.turnRotation = 0 // index of the player who's turn it is (counts up with this.turn then rolls over)
-        this.winner // Player who won
-        this.hasWon = false // if anyone has won (bool)
+        this.cApp = canvasApp || new CanvasApp() // The canvas app used to draw the game board
 
-        this.winCount = winCount
+        this.players = [{id: host.id, img: host.img, isWinner: false}] // Player 1 (creator of game) & Player 2 (player who joined)
+        this.playerTurn // Player who's turn it is
+        this.turn = 0 // The total number of turns elapsed
+        this.turnRotation = 0 // The index of the player who's turn it is (counts up with this.turn then rolls over)
+
+        this.winner // Player who won
+        this.hasWon = false // If anyone has won (bool)
+        this.isActive = false // If there is a game in progress
 
         this.board // Array of objects {player, winner, age, ...}
-        this.isActive = false
 
         ///////////////////////////////////////////////////////
-        // ToDo: move these to this.gameOptions object
+        // Game Options
         ///////////////////////////////////////////////////////
+
         // Available modes:
         // {mode: "none", mod: 0}       - not yet
         // {mode: "timed", mod: 0}      - not yet
@@ -171,30 +173,22 @@ export default class C4Game {
         // {mode: "blockade", mod: 4}   - not yet
         // {mode: "extra", mod: 2}      - not yet
         // {mode: "extra2", mod: 2}     - not yet
-        this.gameModes = [mode]
-        this.timedProps = {time: 30}
-        this.decayProps = {turns: 4}
-        this.powerupProps = {
-            turns: 3,
-            types: ["extra-turn", "skip-next", "petrify-random", "grow-vert", "grow-horz"]
-        }
-        ///////////////////////////////////////////////////////
-        ///////////////////////////////////////////////////////
 
-        ///////////////////////////////////////////////////////
-        // Game Options
-        ///////////////////////////////////////////////////////
-
-        // Size calc
+        // Voard size calc
         this.boardMaxWidth = 36
         this.boardMaxHeight = 36
         const clampedWidth = (width >= this.boardMaxWidth) ? this.boardMaxWidth : width
         const clampedHeight = (height >= this.boardMaxHeight) ? this.boardMaxHeight : height
         
-        this.gameOptions = { // ToDo: use this object
+        // Options
+        this.gameOptions = {
+            // Player options
+            expectedPlayerCount: playerCount,
+            // Board options
             boardWidth: clampedWidth,
             boardHeight: clampedHeight,
             winCount: winCount,
+            // Game modes
             gameModes: [mode],
             timedProps: {time: 30},
             decayProps: {turns: 4},
@@ -216,7 +210,7 @@ export default class C4Game {
             nonPlayers: ["#a3a3a3", "#ffffff"],
             winOutline: "#00ff00",
             win: "#ffffff",
-            players: ["#ee1111", "#ffcc11", "#d400f9", "#1bed97", "#76aa3a", "#66509b", "#82c8d8", "#755a2c", "#e8b6ff", "#408184", "#ffd4a9", "#8c4f70"]
+            players: playerColorArray
         }
     }
 
@@ -595,28 +589,69 @@ export default class C4Game {
     }
 
     ///////////////////////////////////////////////////////
-    // Game
+    // Game Commands (Refactored)
     ///////////////////////////////////////////////////////
-    StartGame(sendMessage = () => {}) { // ToDo: implement this
+    StartGame(sendMessage = () => {}, prefix = "//") {
         // Set random starting player
-        this.RandomizePlayers()
+        shuffle(this.players)
         this.playerTurn = this.players[0].id
-        console.log(this.players)
 
         // Start game
         this.CreateBoard()
         this.isActive = true
         
         const mention = `<@${this.playerTurn}>`
-        const prompt = `It is ${mention}'s turn.\nType "${prefix}" <1-${this.gameOptions.boardWidth}> to place a piece.`
+        const prompt = `It is ${mention}'s turn.\nType ${prefix}<1-${this.gameOptions.boardWidth}> to place a piece.`
 
         // Draw and send board
         const message = this.SendBoardUpdate(prompt)
         sendMessage(message.p, message.a)
     }
 
+    EndGame(sendMessage = () => {}) {
+        // End game
+        this.isActive = false
+
+        // Send message
+        const prompt = `The current connect 4 game has been ended.`
+        sendMessage(prompt)
+    }
+
+    TakeTurn(authorId, command, sendMessage = () => {}, RemoveBotMessages = () => {}) {
+        // Check if it is my turn
+        if (this.playerTurn == authorId) {
+            // Check if position is valid
+            if (parseInt(command) <= this.gameOptions.boardWidth) {
+                // Remove last bot message
+                RemoveBotMessages(10)
+
+                // Place piece
+                var turn = this.PlacePiece(parseInt(command))
+                sendMessage(turn.p, turn.a)
+            }
+            else {
+                // Not valid
+                sendMessage(`Nice try, you can't place anything there!`)
+            }
+        }
+        else {
+            // It is not your turn
+            var mention = `<@${this.playerTurn}>`
+            sendMessage(`It is ${mention}'s turn.`)
+        }
+    }
+
+    Undo(sendMessage = () => {}) {
+        // You cannot undo, so tell the player this
+        const mention = `<@${this.playerTurn}>`
+        const prompt = `${mention} you cannot undo. That's cheating!`
+
+        // Send message
+        sendMessage(prompt)
+    }
+
     ///////////////////////////////////////////////////////
-    // Send Updates
+    // Send Updates (Refactored)
     ///////////////////////////////////////////////////////
     SendBoardUpdate(prompt) {
         // Draw board
@@ -628,43 +663,43 @@ export default class C4Game {
     }
 
     ///////////////////////////////////////////////////////
-    // Game modes
+    // Game modes (Refactored)
     ///////////////////////////////////////////////////////
     DoDecay = () => {
         // Check to see if game mode is active and the selected number of turns have passed
-        if (this.gameModes.includes("decay") && ((this.turn + 1) % this.decayProps.turns) == 0) {
+        if (this.gameOptions.gameModes.includes("decay") && ((this.turn + 1) % this.gameOptions.decayProps.turns) == 0) {
             // Get all player pieces' positions
-            var p = [];
+            var p = []
             for (var i = 0; i < this.board.length; i++) {
                 for (var j = 0; j < this.board[i].length; j++) {
-                    if (this.board[i][j].player != 0 && this.board[i][j].player <= this.colors.players.length) p[p.length] = {x: j, y: i};
+                    if (this.board[i][j].player != 0 && this.board[i][j].player <= this.colors.players.length) p[p.length] = {x: j, y: i}
                 }
             }
             // Pick a random piece
-            var rand = getRandomInt(0, p.length);
+            var rand = getRandomInt(0, p.length)
             // Turn to an index 1 greater than the max possible player count
-            this.board[p[rand].y][p[rand].x].player = this.colors.players.length +1; // the +1 is to change the index on the board correctly
-            console.log("Piece has decayed");
+            this.board[p[rand].y][p[rand].x].player = this.colors.players.length +1 // the +1 is to change the index on the board correctly
+            console.log("Piece has decayed")
         }
         else {
-            //console.log("Can't decay");
+            //console.log("Can't decay")
         }
     }
 
     DoPowerup = () => {
         // Check to see if game mode is active and the selected number of turns have passed
-        if (this.gameModes.includes("powerup") && ((this.turn + 1) % this.powerupProps.turns) == 0) {
+        if (this.gameOptions.gameModes.includes("powerup") && ((this.turn + 1) % this.gameOptions.powerupProps.turns) == 0) {
             
             // Get all open cols
-            let openCols = [];
+            let openCols = []
             for (var c = 0; c < this.gameOptions.boardWidth; c++) {
                 for (var r = 0; r < this.gameOptions.boardHeight; r++) {
                     if (this.board[r][c].player === 0) {
                         // If this row already has a powerup, end the loop
-                        if (this.board[r][c].player >= this.colors.players.length +1) r = this.gameOptions.boardHeight;
+                        if (this.board[r][c].player >= this.colors.players.length +1) r = this.gameOptions.boardHeight
                         else {
-                            openCols.push(c); // Store this col index
-                            r = this.gameOptions.boardHeight; // End looping on this col
+                            openCols.push(c) // Store this col index
+                            r = this.gameOptions.boardHeight // End looping on this col
                         }
                     }
                 }
@@ -673,21 +708,21 @@ export default class C4Game {
             // If there are any open spots
             if (openCols.length > 0) {
                 // Get random col
-                const powerupCol = getRandomInt(0, openCols.length);
-                const powerupType = this.powerupProps.types[getRandomInt(0, this.powerupProps.types.length)];
+                const powerupCol = getRandomInt(0, openCols.length)
+                const powerupType = this.gameOptions.powerupProps.types[getRandomInt(0, this.gameOptions.powerupProps.types.length)]
 
                 // Player powerup
-                this.board[0][openCols[powerupCol]].player = this.colors.players.length + c4Special[powerupType].offset; // TODO: change this so powerups are rendered instead
-                console.log(`Powerup of type "${powerupType}" spawned at X: ${openCols[powerupCol] + 1}`);
+                this.board[0][openCols[powerupCol]].player = this.colors.players.length + c4Special[powerupType].offset // TODO: change this so powerups are rendered instead
+                console.log(`Powerup of type "${powerupType}" spawned at X: ${openCols[powerupCol] + 1}`)
             }
         }
         else {
-            //console.log("Can't place powerup");
+            //console.log("Can't place powerup")
         }
     }
 
     ///////////////////////////////////////////////////////
-    // Check winner
+    // Check winner (Refactored)
     ///////////////////////////////////////////////////////
     // The function to call when checking for winners
     CheckWinner = () => {
@@ -804,7 +839,7 @@ export default class C4Game {
                     winningIndexes.push(i)
                     count++
                     // if there is enough in a row to win
-                    if (count >= this.winCount) {
+                    if (count >= this.gameOptions.winCount) {
                         // Set all winning pieces isWinner = true
                         if (winningIndexes.length > 0) {
                             for (let q = 0; q < winningIndexes.length; q++) {
@@ -827,15 +862,6 @@ export default class C4Game {
             last = ar[i]
         }
         return false
-    }
-
-    RandomizePlayers() {
-        let m = this.players.length, i
-        while(m) {
-            i = Math.floor(Math.random() * m--)
-    
-            [this.players[m], this.players[i]] = [this.players[i], this.players[m]]
-        }
     }
 }
 
