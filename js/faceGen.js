@@ -1,6 +1,7 @@
 import Discord from 'discord.js'
+import { getRandomInt } from './utils.js'
 
-export default function GenerateFace() {
+export default function GenerateFace(cApp, headImgs, eyeImgs, noseImgs, mouthImgs ) {
     cApp.ChangeSize({x: 512, y: 512})
 
     var h = getRandomInt(0, headImgs.length)

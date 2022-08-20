@@ -358,7 +358,7 @@ const BotCommands = {
         description: "Displays information about this bot.",
         function: function(userMessage, mentionMe, args, IAmAMod) {
             // Show info about This bot
-            userMessage.channel.send(`My name is CaperClone! CaperCube made me 👍 I can do a bunch of things.\nMy Github repo is here: ${repoLink}\nType in "${prefix}help" to see the list of commands.`);
+            userMessage.channel.send(`CaperCube made me 👍 I can do a bunch of things, but mostly games.\nMy Github repo is here: ${repoLink}\nType in "${prefix}help" to see the list of commands.`);
         }
     },
     //
@@ -371,7 +371,7 @@ const BotCommands = {
         function: function(userMessage, mentionMe, args, IAmAMod) {
             // Send message
             var prompt = ""
-            userMessage.channel.send(prompt, GenerateFace())
+            userMessage.channel.send(prompt, GenerateFace(cApp, headImgs, eyeImgs, noseImgs, mouthImgs))
         }
     },
     //
